@@ -1,9 +1,13 @@
 package main
 
 import (
-	godotevn "github.com/joho/godotenv"
 	"log"
+	"net/http"
 	"os"
+	"time"
+
+	tado "github.com/attadanta/tado-connect/pkg/tado"
+	godotevn "github.com/joho/godotenv"
 )
 
 func main() {
@@ -19,4 +23,40 @@ func main() {
 	log.Printf("Username: %s\n", username)
 	log.Printf("Password: %s\n", password)
 	log.Printf("Client Secret: %s\n", clientSecret)
+
+	httpClient := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	tokens, err := tado.GetBearerToken(httpClient, tado.GetTokensParams{
+		Username:     username,
+		Password:     password,
+		ClientSecret: clientSecret,
+	})
+	if err != nil {
+		log.Fatalf("Error getting bearer token: %s", err)
+	}
+
+	tadoClient := tado.NewTadoClient(httpClient, tokens)
+	owner, err := tadoClient.GetMe()
+	if err != nil {
+		log.Fatalf("Error getting owner: %s", err)
+	}
+	log.Printf("Owner: %+v\n", owner)
+
+	home := owner.Homes[0]
+	log.Printf("Home: %+v\n", home)
+
+	zones, err := tadoClient.GetZones(home.ID)
+	if err != nil {
+		log.Fatalf("Error getting zones: %s", err)
+	}
+	log.Printf("Zones: %+v\n", zones)
+
+	zoneStates, err := tadoClient.GetZoneStates(home.ID)
+	if err != nil {
+		log.Fatalf("Error getting zone states: %s", err)
+	}
+	log.Printf("Zone States: %+v\n", zoneStates)
+
 }
