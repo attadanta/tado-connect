@@ -51,12 +51,11 @@ type OpenWindowDetection struct {
 
 // Device represents a physical device in a zone
 type Device struct {
-	DeviceType       string            `json:"deviceType"`
-	SerialNo         string            `json:"serialNo"`
-	ShortSerialNo    string            `json:"shortSerialNo"`
-	CurrentFwVersion string            `json:"currentFwVersion"`
-	ConnectionState  TimestampedValue  `json:"connectionState"`
-	MountingState    *TimestampedValue `json:"mountingState,omitempty"`
+	DeviceType       string           `json:"deviceType"`
+	SerialNo         string           `json:"serialNo"`
+	ShortSerialNo    string           `json:"shortSerialNo"`
+	CurrentFwVersion string           `json:"currentFwVersion"`
+	ConnectionState  TimestampedValue `json:"connectionState"`
 }
 
 // ZoneStates represents the state mapping for all zones
@@ -75,19 +74,19 @@ type Zone struct {
 	OpenWindowDetection OpenWindowDetection `json:"openWindowDetection"`
 }
 
-// Temperature represents a temperature in multiple units
-type Temperature struct {
+// TemperaturePrecision represents a temperature in multiple units
+type TemperaturePrecision struct {
 	Celsius    float64 `json:"celsius"`
 	Fahrenheit float64 `json:"fahrenheit"`
 }
 
 // TemperatureDataPoint represents a temperature measurement with metadata
 type TemperatureDataPoint struct {
-	Celsius    float64     `json:"celsius"`
-	Fahrenheit float64     `json:"fahrenheit"`
-	Timestamp  time.Time   `json:"timestamp"`
-	Type       string      `json:"type"`
-	Precision  Temperature `json:"precision"`
+	Celsius    float64              `json:"celsius"`
+	Fahrenheit float64              `json:"fahrenheit"`
+	Timestamp  time.Time            `json:"timestamp"`
+	Type       string               `json:"type"`
+	Precision  TemperaturePrecision `json:"precision"`
 }
 
 // PercentageDataPoint represents a percentage measurement with metadata
