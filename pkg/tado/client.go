@@ -103,6 +103,28 @@ func (t *TadoClient) GetZones(homeID int) ([]Zone, error) {
 	return zones, nil
 }
 
+func (t *TadoClient) GetZoneState(homeID int, zoneId string) (ZoneState, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://my.tado.com/api/v2/homes/%d/zones/%s/state", homeID, zoneId), nil)
+	if err != nil {
+		return ZoneState{}, err
+	}
+
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", t.Tokens.AccessToken))
+	res, err := t.Client.Do(req)
+	if err != nil {
+		return ZoneState{}, err
+	}
+	defer res.Body.Close()
+
+	zone := ZoneState{}
+	err = jsonResponse(res, &zone)
+	if err != nil {
+		return ZoneState{}, err
+	}
+
+	return zone, nil
+}
+
 func (t *TadoClient) GetZoneStates(homeID int) (ZoneStates, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("https://my.tado.com/api/v2/homes/%d/zoneStates", homeID), nil)
 	if err != nil {
