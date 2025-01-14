@@ -57,13 +57,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error getting zone states: %s", err)
 	}
-	for zoneId := range states.ZoneStates {
-		zone, err := tadoClient.GetZoneState(home.ID, zoneId)
-		if err != nil {
-			log.Printf("Error getting zone: %s\n", err)
-		}
-
-		log.Printf("Zone: %+v\n", zone)
+	for zoneId, state := range states.ZoneStates {
+		log.Printf("Zone %s: %+v\n", zoneId, state)
 	}
 
 	log.Printf("Zone States: %+v\n", states)
