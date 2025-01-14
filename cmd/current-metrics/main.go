@@ -10,6 +10,14 @@ import (
 	godotevn "github.com/joho/godotenv"
 )
 
+// Print the current state of the zones at home.
+//
+// Output Fields:
+//
+// - ZoneId
+// - Sensor
+// - InsideTemperature
+// - Humidity
 func main() {
 	err := godotevn.Load(".env")
 	if err != nil {
@@ -43,6 +51,11 @@ func main() {
 		log.Fatalf("Error getting owner: %s", err)
 	}
 	log.Printf("Owner: %+v\n", owner)
+
+	homes := owner.Homes
+	if len(homes) == 0 {
+		log.Fatalf("No homes found")
+	}
 
 	home := owner.Homes[0]
 	log.Printf("Home: %+v\n", home)
