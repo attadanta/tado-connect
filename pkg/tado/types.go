@@ -14,6 +14,11 @@ type GetTokensParams struct {
 	ClientSecret string
 }
 
+type GetRefreshTokenParams struct {
+	ClientSecret string
+	RefreshToken string
+}
+
 type Tokens struct {
 	AccessToken  string `json:"access_token"`
 	TokenType    string `json:"token_type"`

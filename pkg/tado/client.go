@@ -81,6 +81,34 @@ func GetBearerToken(c *http.Client, p GetTokensParams) (Tokens, error) {
 	return tokens, nil
 }
 
+func GetRefreshToken(c *http.Client, p GetRefreshTokenParams) (Tokens, error) {
+	f := url.Values{}
+	f.Add("client_id", "tado-web-app")
+	f.Add("grant_type", "refresh_token")
+	f.Add("client_secret", p.ClientSecret)
+	f.Add("refresh_token", p.RefreshToken)
+
+	req, err := http.NewRequest("POST", "https://auth.tado.com/oauth/token", strings.NewReader(f.Encode()))
+	if err != nil {
+		return Tokens{}, err
+	}
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+
+	res, err := c.Do(req)
+	if err != nil {
+		return Tokens{}, err
+	}
+	defer res.Body.Close()
+
+	tokens := Tokens{}
+	err = jsonResponse(res, &tokens)
+	if err != nil {
+		return Tokens{}, err
+	}
+
+	return tokens, nil
+}
+
 func (t *TadoClient) GetZones(homeID int) ([]Zone, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("https://my.tado.com/api/v2/homes/%d/zones", homeID), nil)
 	if err != nil {
