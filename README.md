@@ -19,3 +19,16 @@ Content-Type: `application/x-www-form-urlencoded`
 | password      | string | Tado password      |
 | client_secret | string | Tado client secret |
 
+
+### Get Home ID
+
+```
+GET https://my.tado.com/api/v2/me
+```
+
+### Get Zone States
+
+```
+GET https://my.tado.com/api/v2/homes/{home_id}/zoneStates
+```
+
