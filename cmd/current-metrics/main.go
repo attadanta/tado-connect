@@ -4,16 +4,37 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	tado "github.com/attadanta/tado-connect/pkg/tado"
 	godotevn "github.com/joho/godotenv"
 )
 
+func fetchZoneStatesAndPrint(c *tado.TadoClient, ticker time.Ticker, done chan bool, homeID int) {
+	for {
+		select {
+		case <-done:
+			log.Printf("Stopping zone state fetcher")
+			return
+		case <-ticker.C:
+			log.Printf("Getting new zone states")
+			states, err := c.GetZoneStates(homeID)
+			if err != nil {
+				log.Fatalf("Error getting zone states: %s", err)
+			}
+			for zoneId, state := range states.ZoneStates {
+				log.Printf("Zone %s: %+v\n", zoneId, state)
+			}
+		}
+	}
+}
+
 // Print the current state of the zones at home.
 //
 // Output Fields:
 //
+// - Timestamp
 // - ZoneId
 // - Sensor
 // - InsideTemperature
@@ -28,12 +49,21 @@ func main() {
 	password := os.Getenv("TADO_PASSWORD")
 	clientSecret := os.Getenv("TADO_CLIENT_SECRET")
 
-	log.Printf("Username: %s\n", username)
-	log.Printf("Password: %s\n", password)
-	log.Printf("Client Secret: %s\n", clientSecret)
+	timeoutRaw := os.Getenv("HTTP_CLIENT_TIMEOUT")
+	timeout, err := time.ParseDuration(timeoutRaw)
+	if err != nil {
+		log.Fatalf("Error parsing HTTP_CLIENT_TIMEOUT: %s", err)
+	}
+
+	tickerPeriodRaw := os.Getenv("REFETCH_PERIOD")
+	log.Printf("Ticker period: %s\n", tickerPeriodRaw)
+	tickerPeriod, err := time.ParseDuration(tickerPeriodRaw)
+	if err != nil {
+		log.Fatalf("Error parsing REFETCH_PERIOD: %s", err)
+	}
 
 	httpClient := &http.Client{
-		Timeout: 10 * time.Second,
+		Timeout: timeout,
 	}
 
 	tokens, err := tado.GetBearerToken(httpClient, tado.GetTokensParams{
@@ -57,23 +87,15 @@ func main() {
 		log.Fatalf("No homes found")
 	}
 
+	ticker := time.NewTicker(tickerPeriod)
+	done := make(chan bool)
+
 	home := owner.Homes[0]
 	log.Printf("Home: %+v\n", home)
 
-	zones, err := tadoClient.GetZones(home.ID)
-	if err != nil {
-		log.Fatalf("Error getting zones: %s", err)
-	}
-	log.Printf("Zones: %+v\n", zones)
+	fetchZoneStatesAndPrint(tadoClient, *ticker, done, home.ID)
 
-	states, err := tadoClient.GetZoneStates(home.ID)
-	if err != nil {
-		log.Fatalf("Error getting zone states: %s", err)
-	}
-	for zoneId, state := range states.ZoneStates {
-		log.Printf("Zone %s: %+v\n", zoneId, state)
-	}
-
-	log.Printf("Zone States: %+v\n", states)
-
+	var wg sync.WaitGroup
+	wg.Add(1)
+	wg.Wait()
 }

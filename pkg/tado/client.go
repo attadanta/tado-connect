@@ -13,8 +13,8 @@ type TadoClient struct {
 	Tokens Tokens
 }
 
-func NewTadoClient(c *http.Client, t Tokens) TadoClient {
-	return TadoClient{
+func NewTadoClient(c *http.Client, t Tokens) *TadoClient {
+	return &TadoClient{
 		Client: c,
 		Tokens: t,
 	}
