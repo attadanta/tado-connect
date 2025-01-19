@@ -10,25 +10,6 @@ import (
 	godotevn "github.com/joho/godotenv"
 )
 
-func fetchZoneStatesAndPrint(c *tado.TadoClient, ticker time.Ticker, done chan bool, homeID int) {
-	for {
-		select {
-		case <-done:
-			log.Printf("Stopping zone state fetcher")
-			return
-		case <-ticker.C:
-			log.Printf("Getting new zone states")
-			states, err := c.GetZoneStates(homeID)
-			if err != nil {
-				log.Fatalf("Error getting zone states: %s", err)
-			}
-			for zoneId, state := range states.ZoneStates {
-				log.Printf("Zone %s: %+v\n", zoneId, state)
-			}
-		}
-	}
-}
-
 // Print the current state of the zones at home.
 //
 // Output Fields:
