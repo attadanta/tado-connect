@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 
 	tado "github.com/attadanta/tado-connect/pkg/tado"
@@ -55,13 +54,6 @@ func main() {
 		log.Fatalf("Error parsing HTTP_CLIENT_TIMEOUT: %s", err)
 	}
 
-	tickerPeriodRaw := os.Getenv("REFETCH_PERIOD")
-	log.Printf("Ticker period: %s\n", tickerPeriodRaw)
-	tickerPeriod, err := time.ParseDuration(tickerPeriodRaw)
-	if err != nil {
-		log.Fatalf("Error parsing REFETCH_PERIOD: %s", err)
-	}
-
 	httpClient := &http.Client{
 		Timeout: timeout,
 	}
@@ -87,15 +79,14 @@ func main() {
 		log.Fatalf("No homes found")
 	}
 
-	ticker := time.NewTicker(tickerPeriod)
-	done := make(chan bool)
-
 	home := owner.Homes[0]
 	log.Printf("Home: %+v\n", home)
 
-	fetchZoneStatesAndPrint(tadoClient, *ticker, done, home.ID)
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-	wg.Wait()
+	states, err := tadoClient.GetZoneStates(home.ID)
+	if err != nil {
+		log.Fatalf("Error getting zone states: %s", err)
+	}
+	for zoneId, state := range states.ZoneStates {
+		log.Printf("Zone %s: %+v\n", zoneId, state)
+	}
 }
