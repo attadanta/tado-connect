@@ -1,11 +1,14 @@
 package tado
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 func jsonResponse(r *http.Response, d any) error {
@@ -19,15 +22,35 @@ func jsonResponse(r *http.Response, d any) error {
 
 type TadoClient struct {
 	client       *http.Client
-	auth         *Tokens
 	clientSecret string
+	auth         *Tokens
 }
 
 func NewTadoClient(c *http.Client, clientSecret string, t Tokens) *TadoClient {
-	return &TadoClient{
+	client := TadoClient{
 		client:       c,
-		auth:         &t,
 		clientSecret: clientSecret,
+		auth:         &t,
+	}
+
+	return &client
+}
+
+func (c *TadoClient) refreshToken(ctx context.Context, ticker time.Ticker) error {
+	log.Printf("Starting the token refresher coroutine")
+	for {
+		select {
+		case <-ctx.Done():
+			log.Printf("Stopping the token refresher coroutine due to cancellation")
+			return nil
+		case <-ticker.C:
+			t, err := c.getRefreshToken(c.client)
+			if err != nil {
+				log.Printf("Error refreshing token, stopping the token refresher coroutine: %v", err)
+				return err
+			}
+			c.auth = &t
+		}
 	}
 }
 
@@ -84,12 +107,12 @@ func (t *TadoClient) GetMe() (Owner, error) {
 	return owner, nil
 }
 
-func GetRefreshToken(c *http.Client, p GetRefreshTokenParams) (Tokens, error) {
+func (t *TadoClient) getRefreshToken(c *http.Client) (Tokens, error) {
 	f := url.Values{}
 	f.Add("client_id", "tado-web-app")
 	f.Add("grant_type", "refresh_token")
-	f.Add("client_secret", p.ClientSecret)
-	f.Add("refresh_token", p.RefreshToken)
+	f.Add("client_secret", t.clientSecret)
+	f.Add("refresh_token", t.auth.RefreshToken)
 
 	req, err := http.NewRequest("POST", "https://auth.tado.com/oauth/token", strings.NewReader(f.Encode()))
 	if err != nil {
