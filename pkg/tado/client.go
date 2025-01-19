@@ -8,6 +8,15 @@ import (
 	"strings"
 )
 
+func jsonResponse(r *http.Response, d any) error {
+	if r.StatusCode != 200 {
+		return fmt.Errorf("Bad HTTP status %d", r.StatusCode)
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	return decoder.Decode(&d)
+}
+
 type TadoClient struct {
 	Client *http.Client
 	Tokens Tokens
@@ -40,15 +49,6 @@ func (t *TadoClient) GetMe() (Owner, error) {
 	}
 
 	return owner, nil
-}
-
-func jsonResponse(r *http.Response, d any) error {
-	if r.StatusCode != 200 {
-		return fmt.Errorf("Bad HTTP status %d", r.StatusCode)
-	}
-
-	decoder := json.NewDecoder(r.Body)
-	return decoder.Decode(&d)
 }
 
 func GetBearerToken(c *http.Client, p GetTokensParams) (Tokens, error) {
