@@ -8,7 +8,7 @@ const (
 	ZoneTypeHeating = "HEATING"
 )
 
-type GetTokensParams struct {
+type AuthenticateParams struct {
 	Username     string
 	Password     string
 	ClientSecret string

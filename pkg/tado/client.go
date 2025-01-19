@@ -58,7 +58,7 @@ func (c *TadoClient) refreshToken(ctx context.Context, ticker time.Ticker, clien
 }
 
 // Authenticate obtains an access token from the `oauth/token` resource.
-func Authenticate(c *http.Client, p GetTokensParams) (Tokens, error) {
+func Authenticate(c *http.Client, p AuthenticateParams) (Tokens, error) {
 	f := url.Values{}
 	f.Add("client_id", "tado-web-app")
 	f.Add("grant_type", "password")
