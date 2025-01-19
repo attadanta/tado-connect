@@ -18,40 +18,21 @@ func jsonResponse(r *http.Response, d any) error {
 }
 
 type TadoClient struct {
-	Client *http.Client
-	Tokens Tokens
+	client       *http.Client
+	auth         *Tokens
+	clientSecret string
 }
 
-func NewTadoClient(c *http.Client, t Tokens) *TadoClient {
+func NewTadoClient(c *http.Client, clientSecret string, t Tokens) *TadoClient {
 	return &TadoClient{
-		Client: c,
-		Tokens: t,
+		client:       c,
+		auth:         &t,
+		clientSecret: clientSecret,
 	}
 }
 
-func (t *TadoClient) GetMe() (Owner, error) {
-	req, err := http.NewRequest("GET", "https://my.tado.com/api/v2/me", nil)
-	if err != nil {
-		return Owner{}, err
-	}
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", t.Tokens.AccessToken))
-
-	res, err := t.Client.Do(req)
-	if err != nil {
-		return Owner{}, err
-	}
-	defer res.Body.Close()
-
-	owner := Owner{}
-	err = jsonResponse(res, &owner)
-	if err != nil {
-		return Owner{}, err
-	}
-
-	return owner, nil
-}
-
-func GetBearerToken(c *http.Client, p GetTokensParams) (Tokens, error) {
+// Authenticate obtains an access token from the `oauth/token` resource.
+func Authenticate(c *http.Client, p GetTokensParams) (Tokens, error) {
 	f := url.Values{}
 	f.Add("client_id", "tado-web-app")
 	f.Add("grant_type", "password")
@@ -79,6 +60,28 @@ func GetBearerToken(c *http.Client, p GetTokensParams) (Tokens, error) {
 	}
 
 	return tokens, nil
+}
+
+func (t *TadoClient) GetMe() (Owner, error) {
+	req, err := http.NewRequest("GET", "https://my.tado.com/api/v2/me", nil)
+	if err != nil {
+		return Owner{}, err
+	}
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", t.auth.AccessToken))
+
+	res, err := t.client.Do(req)
+	if err != nil {
+		return Owner{}, err
+	}
+	defer res.Body.Close()
+
+	owner := Owner{}
+	err = jsonResponse(res, &owner)
+	if err != nil {
+		return Owner{}, err
+	}
+
+	return owner, nil
 }
 
 func GetRefreshToken(c *http.Client, p GetRefreshTokenParams) (Tokens, error) {
@@ -114,9 +117,9 @@ func (t *TadoClient) GetZones(homeID int) ([]Zone, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", t.Tokens.AccessToken))
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", t.auth.AccessToken))
 
-	res, err := t.Client.Do(req)
+	res, err := t.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -137,8 +140,8 @@ func (t *TadoClient) GetZoneState(homeID int, zoneId string) (ZoneState, error) 
 		return ZoneState{}, err
 	}
 
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", t.Tokens.AccessToken))
-	res, err := t.Client.Do(req)
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", t.auth.AccessToken))
+	res, err := t.client.Do(req)
 	if err != nil {
 		return ZoneState{}, err
 	}
@@ -158,9 +161,9 @@ func (t *TadoClient) GetZoneStates(homeID int) (ZoneStates, error) {
 	if err != nil {
 		return ZoneStates{}, err
 	}
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", t.Tokens.AccessToken))
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", t.auth.AccessToken))
 
-	res, err := t.Client.Do(req)
+	res, err := t.client.Do(req)
 	if err != nil {
 		return ZoneStates{}, err
 	}
