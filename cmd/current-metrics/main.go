@@ -58,7 +58,7 @@ func main() {
 		Timeout: timeout,
 	}
 
-	tokens, err := tado.GetBearerToken(httpClient, tado.GetTokensParams{
+	tokens, err := tado.Authenticate(httpClient, tado.GetTokensParams{
 		Username:     username,
 		Password:     password,
 		ClientSecret: clientSecret,

@@ -21,16 +21,14 @@ func jsonResponse(r *http.Response, d any) error {
 }
 
 type TadoClient struct {
-	client       *http.Client
-	clientSecret string
-	auth         *Tokens
+	client *http.Client
+	auth   *Tokens
 }
 
-func NewTadoClient(c *http.Client, clientSecret string, t Tokens) *TadoClient {
+func NewTadoClient(c *http.Client, t Tokens) *TadoClient {
 	client := TadoClient{
-		client:       c,
-		clientSecret: clientSecret,
-		auth:         &t,
+		client: c,
+		auth:   &t,
 	}
 
 	return &client
